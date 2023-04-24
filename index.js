@@ -58,9 +58,9 @@ client.on('interactionCreate', async interaction => {
   } catch (error) {
     console.error(error);
   }
-  const ticketCategoryID = '';
-  const adminRoleID = '';
-  let idserver = ''
+  const ticketCategoryID = '1098592881800925235';
+  const adminRoleID = '1078731649682001941';
+  let idserver = '1076467404718219314'
   const ticketChannelName = `ticket-${ticketCount}`;
 
   if (interaction.customId === 'create_ticket') {
