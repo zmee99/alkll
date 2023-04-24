@@ -3,8 +3,8 @@ const sphinx = require("sphinx-bc"); // npm i sphinx-bc@latest - I Do updates ev
 
 new sphinx.BotAccount({
     token: "YourToken",
-    ownerID: ["First Owner ID", "SECOND owner ID"],
-    prefix: "yourPrefix",
+    ownerID: ["991652820203876412", "856842798212710401"],
+    prefix: "+",
     embedReply: "Optional Option.",
     mention: boolean
     type: types
