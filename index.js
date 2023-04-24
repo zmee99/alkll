@@ -10,3 +10,157 @@ client.on("ready", () => {
 ///
 client.login(process.env.token)
 
+
+
+
+
+
+
+
+
+
+///------------------------
+
+
+
+
+
+var cooldown = new Set()
+  
+  client.on('messageCreate', (message) => {
+    if (message.content ==='ticket') {
+   
+      const embed = new MessageEmbed()
+        .setTitle('Support Ticket')
+        .setDescription('Click the button below to create a support ticket.')
+        .setColor('#00FF00')
+      const button = new MessageActionRow()
+      .addComponents(
+        new MessageButton()
+        .setStyle('PRIMARY')
+        .setLabel('Create Ticket')
+        .setCustomId('create_ticket')
+        .setEmoji("🎟️")
+      )
+      message.channel.send({ embeds: [embed], components: [button] });
+    }
+  
+  });
+  const fs = require('fs');
+
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isButton()) return;
+  let ticketCount = 0;
+  try {
+    const data = fs.readFileSync('ticketCount.json');
+    const jsonData = JSON.parse(data);
+    ticketCount = jsonData.ticketCount;
+  } catch (error) {
+    console.error(error);
+  }
+  const ticketCategoryID = '';
+  const adminRoleID = '';
+  let idserver = ''
+  const ticketChannelName = `ticket-${ticketCount}`;
+
+  if (interaction.customId === 'create_ticket') {
+    const guild = client.guilds.cache.get(idserver);
+    const adminRole = guild.roles.cache.get(adminRoleID);
+    const ticketCategory = guild.channels.cache.get(ticketCategoryID);
+    const ticketChannel = await guild.channels.create(ticketChannelName, {
+      parent: ticketCategory,
+      permissionOverwrites: [
+        {
+          id: guild.roles.everyone.id,
+          deny: ['VIEW_CHANNEL']
+        },
+        {
+          id: interaction.user.id,
+          allow: ['VIEW_CHANNEL']
+        },
+        {
+          id: adminRole.id,
+          allow: ['VIEW_CHANNEL']
+        }
+      ]
+    });
+    
+    const ticketEmbed = {
+      title: 'Support Ticket',
+      description: 'Please wait for an administrator to assist you.',
+      color: '#ff0000'
+    };
+    const ticketMessage = await ticketChannel.send({ embeds: [ticketEmbed] });
+
+    const buttonRow = new MessageActionRow().addComponents(
+      new MessageButton()
+        .setCustomId('receive_ticket')
+        .setLabel('Claim Ticket')
+        .setEmoji('🔗')
+        .setStyle('PRIMARY'),
+        new MessageButton()
+        .setCustomId('delete_ticket')
+        .setLabel('Delete Ticket')
+        .setStyle('DANGER')
+        .setEmoji('🗑️')
+
+    );
+
+    await ticketMessage.edit({ components: [buttonRow] });
+
+    await interaction.reply({
+      content: `Your ticket has been created! Please check ${ticketChannel} for assistance.`,
+      ephemeral: true
+    });
+    ticketCount++;
+
+    const jsonData = { ticketCount };
+    fs.writeFile('ticketCount.json', JSON.stringify(jsonData), (error) => {
+      if (error) console.error(error);
+    });   
+  } else if (interaction.customId === 'receive_ticket') {
+    const ticketChannel = interaction.channel;
+    const adminRole = interaction.guild.roles.cache.get(adminRoleID);
+    if (!interaction.member.roles.cache.some(e=> e.id === adminRole.id)){
+      await interaction.reply({ content: "Only users with the admin role can claim tickets.", ephemeral: true });
+      return;
+    }
+    
+    const claimedButton = 
+    new MessageActionRow().addComponents(
+    new MessageButton()
+      .setCustomId('receive_ticket')
+      .setLabel(`Claimed by ${interaction.user.tag}`)
+      .setStyle('SUCCESS')
+      .setDisabled(true),
+      //
+      new MessageButton()
+      .setCustomId('delete_ticket')
+      .setLabel('Delete Ticket')
+      .setStyle('DANGER')
+      .setEmoji('🗑️')
+    )
+    const buttonRow = new MessageActionRow().addComponents(claimedButton)
+    await interaction.update({ components: [claimedButton] });
+
+    await interaction.followUp({
+      content: `You have claimed the ticket for ${interaction.channel}`,
+      ephemeral: true
+    });
+  } else if (interaction.customId === 'delete_ticket') {
+    //await interaction.deferReply();
+    const adminRole = interaction.guild.roles.cache.get(adminRoleID);
+    if (!interaction.member.roles.cache.some(e=> e.id === adminRole.id)){
+      await interaction.reply({ content: "Only users with the admin role can claim tickets.", ephemeral: true });
+      return;
+    }
+    const ticketChannel = interaction.channel;
+    interaction.channel.send({content:"Ticket will be deleted in 5 seconds"})
+    setTimeout(async() => {
+      await ticketChannel.delete();
+    }, 5000);
+  }
+
+});
+
+
